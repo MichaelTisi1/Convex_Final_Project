@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1622
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "MiniROCKET_R10-X10_Probability_Voting", "MiniROCKET_R10-X10_Probability_Voting\MiniROCKET_R10-X10_Probability_Voting.pyproj", "{700CE667-1987-46DC-B71C-5A92DD59142F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{700CE667-1987-46DC-B71C-5A92DD59142F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700CE667-1987-46DC-B71C-5A92DD59142F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DEF880FD-453A-46E0-A80E-6501ABFEC9F5}
+	EndGlobalSection
+EndGlobal
