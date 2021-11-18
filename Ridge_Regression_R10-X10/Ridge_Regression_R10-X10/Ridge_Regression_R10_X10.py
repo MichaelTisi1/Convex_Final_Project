@@ -19,8 +19,6 @@ Y_test = pd.read_excel(f"{path}test_labels.xlsx", header = None)
 Y_train = Y_train.to_numpy()[:, 0]
 Y_test = Y_test.to_numpy()[:, 0]
 
-print("Data has been loaded.")
-
 # Define the loss function, i.e., squared error.
 # This function takes the following inputs:
 #   - X [2D NumPy array of features. Size of X is (n, m).]
@@ -133,5 +131,3 @@ plot_train_test_errors(train_errors, test_errors, lambd_values) # Plot the train
 plot_regularization_path(lambd_values, beta_values) # Plot the regularization path.
 
 plt.show()
-
-
