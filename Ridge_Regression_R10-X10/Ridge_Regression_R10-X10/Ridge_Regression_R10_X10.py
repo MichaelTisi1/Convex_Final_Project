@@ -2,14 +2,16 @@ import time
 import cvxpy as cp
 import numpy as np
 import pandas as pd
+from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 print(f" BEGIN RIDGE REGRESSION ".center(96, "="))
 
 print(f"Loading data".ljust(75, "."), end = "", flush = True)
 
 # Load the training (X_train, Y_train) and test (X_test, Y_test) data.
-path = "C:/School/PhD/Convex_Final_Project/Data_and_Labels/"
+path = "../../data/"
 X_train = np.load(f"{path}X_train_transform.npy")
 X_test = np.load(f"{path}X_test_transform.npy")
 Y_train = pd.read_excel(f"{path}y_train.xlsx", header = None)
@@ -58,13 +60,20 @@ def objective_fn(X, Y, beta, lambd):
 def mse(X, Y, beta):
     return (1.0 / X.shape[0]) * loss_fn(X, Y, beta).value
 
+
+def add_roc_plot(prediction, labels, name):
+    fpr, tpr, thresholds = roc_curve(labels, prediction)
+    auc_value = auc(fpr, tpr)
+    print(f"{name}, ROC AUC: {round(auc_value, 3)}")
+    plt.step(fpr, tpr, where='post', label=f'{name} AUC: {round(auc_value, 3)}')
+
 # Define a function that plots the training and test error for ridge regression as a function of lambda.
 # This function takes the following inputs:
 #   - train_errors [List of training error values for each candidate lambda.]
 #   - test_errors [List of test error values for each candidate lambda.]
 #   - lambd_values [1D NumPy array of candidate values for lambda.]
 def plot_train_test_errors(train_errors, test_errors, lambd_values):
-    plt.figure()
+    plt.figure(figsize=(10,10))
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = "century"
     plt.rcParams["mathtext.fontset"] = "cm"
@@ -73,8 +82,9 @@ def plot_train_test_errors(train_errors, test_errors, lambd_values):
     plt.xscale("log")
     plt.legend(loc="upper left")
     plt.xlabel(r"$\lambda$", fontsize=16)
-    plt.ylabel ("Mean Squared Error (MSE)")
+    plt.ylabel("Mean Squared Error (MSE)")
     plt.title("MSE for Training and Test Datasets")
+    plt.savefig('../../plots/plot_train_test_errors.png')
 
 # Define a function that plots the regularization path for ridge regression as a function of lambda.
 # This function takes the following inputs:
@@ -82,7 +92,7 @@ def plot_train_test_errors(train_errors, test_errors, lambd_values):
 #   - beta_values [2D NumPy array of optimal beta values for the candidate lambda.]
 def plot_regularization_path(lambd_values, beta_values):
     num_coeffs = len(beta_values[0])
-    plt.figure()
+    plt.figure(figsize=(10,10))
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["font.serif"] = "century"
     plt.rcParams["mathtext.fontset"] = "cm"
@@ -92,16 +102,20 @@ def plot_regularization_path(lambd_values, beta_values):
     plt.ylabel(r"$\beta$ Values")
     plt.xscale("log")
     plt.title("Regularization Path")
+    plt.savefig('../../plots/plot_regularization_path.png')
+
 
 beta = cp.Variable(X_train.shape[1]) # Define the beta variable (i.e., ridge coefficients; to be optimized).
 lambd = cp.Parameter(nonneg=True) # Define the penelizer parameter (i.e., lambda; to be varied).
 problem = cp.Problem(cp.Minimize(objective_fn(X_train, Y_train, beta, lambd))) # Formulate the convex optimization problem.
 
-lambd_values = np.logspace(0, 5, 10) # Define candidate values for lambda.
+# Define candidate values for lambda.
+lambd_values = np.concatenate([np.zeros(1), np.logspace(-5, 5, 1)])
 # Lists to store error values and optimal betas.
 train_errors = []
 test_errors = []
 beta_values = []
+predictions_all = dict()
 
 print("Data has been loaded.")
 
@@ -110,13 +124,15 @@ start = time.time()
 # Solve the convex optmization problem (i.e., find the optimal beta values) for each of the candidate lambdas.
 cnt = 0
 for v in lambd_values:
-    print(f"Training ridge classifier".ljust(80, "."), end = "", flush = True)
+    print(f"Training ridge classifier".ljust(80, "."), end="", flush=True)
     lambd.value = v
-    problem.solve(solver = cp.SCS)
+    problem.solve(solver=cp.SCS)
     train_errors.append(mse(X_train, Y_train, beta))
     test_errors.append(mse(X_test, Y_test, beta))
+    predictions_all[lambd.value] = X_test @ beta
     beta_values.append(beta.value)
     cnt += 1
+    print(f"Run Execution time = {time.time() - start} s.")
     print(f"Run {cnt} complete.")
 
 end = time.time()
@@ -126,8 +142,24 @@ print(f" END RIDGE REGRESSION ".center(96, "="))
 print('\n')
 
 print(f"Execution time = {end - start} s.")
+sns.set()
+sns.set_context('talk')
+for key, values in predictions_all.items():
+    plt.figure(figsize=(10,10))
+    predictions = values.value
+    add_roc_plot(predictions, Y_test, f"lambda: {key}")
+    plt.xlabel('FPR')
+    plt.ylabel('TPR')
+    plt.ylim([0.0, 1.01])
+    plt.xlim([0.0, 1.01])
+    plt.title("Reciever Operating Characteristic (ROC)")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(f'../../plots/roc_plot_lambda_{key}.png')
 
-plot_train_test_errors(train_errors, test_errors, lambd_values) # Plot the training and test error as a function of lambda.
-plot_regularization_path(lambd_values, beta_values) # Plot the regularization path.
+# Plot the training and test error as a function of lambda.
+plot_train_test_errors(train_errors, test_errors, lambd_values)
+# Plot the regularization path.
+plot_regularization_path(lambd_values, beta_values)
 
 plt.show()
